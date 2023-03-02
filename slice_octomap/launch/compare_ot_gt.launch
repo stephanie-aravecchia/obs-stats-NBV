@@ -1,0 +1,7 @@
+<launch>
+
+
+  <node pkg="slice_octomap" name="compare_ot_gt" type="compare_ot_gt" output="screen">
+  </node>
+
+</launch>

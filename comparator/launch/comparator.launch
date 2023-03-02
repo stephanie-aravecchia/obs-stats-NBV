@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="xp_name"/>
+  <arg name="output_res"/>
+  <arg name="base_dir"/>
+  <arg name="output_dir"/>
+
+  <node pkg="comparator" name="$(anon comparator)" type="comparator" output="screen">
+    <!--mandatory params-->
+    <param name="base_dir" type="string" value="$(arg base_dir)"/>
+    <param name="output_dir" type="string" value="$(arg output_dir)"/>
+    <param name="xp_name" type="string" value="$(arg xp_name)"/>
+    <param name="output_res" type="double" value="$(arg output_res)"/>
+    <param name="xp_num" type="int" value="2"/>
+    <param name="n_threads" type="int" value="2"/><!--prefix to the output filename-->
+    <param name="unit_test" type="bool" value="false"/>
+  </node>
+
+</launch>

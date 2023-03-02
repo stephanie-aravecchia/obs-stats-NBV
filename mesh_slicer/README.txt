@@ -1,0 +1,1 @@
+Make, and then run bin/mesh_voxelizer your_file.off resolution

@@ -1,0 +1,34 @@
+<launch>
+  <arg name="grid_resolution"/>
+  <arg name="sensor_range"/>
+  <arg name="policy"/>
+  <arg name="alpha"/>
+  <arg name="debug" default="false"/>
+  <arg name="xmin" default="-30."/>
+  <arg name="xmax" default="30."/>
+  <arg name="ymin" default="-30."/>
+  <arg name="ymax" default="30."/>
+  <arg name="zmin" default="0"/>
+  <arg name="zmax" default="6"/>
+  <arg name="octomap_res_in_navigation_stack" default=".5"/>
+  <arg name="search_range" default="10."/>
+  <!--arg name="frame"/-->
+  <node pkg="explo_quality_aware" name="information_gain_node" type="information_gain_node" output="screen">
+    <remap from="~/costmap" to="/trajectory_costmap_node/trajectory_costmap"/>
+    <remap from="~/obs_stat" to="/obs_stat_grid_pub/stats_pointcloud"/>
+    <remap from="~/occupied_points" to="/occupied_cells_vis_array"/>
+    <param name="resolution" value="$(arg grid_resolution)"/>
+    <param name="sensor_range" value="$(arg sensor_range)"/>
+    <param name="policy" value="$(arg policy)"/>
+    <param name="debug" value="$(arg debug)"/>
+    <param name="octomap_res_in_navigation_stack" value="$(arg octomap_res_in_navigation_stack)"/>
+    <param name="search_range" value="$(arg search_range)"/>
+    <param name="xmin" value="$(arg xmin)"/>
+    <param name="xmax" value="$(arg xmax)"/>
+    <param name="ymin" value="$(arg ymin)"/>
+    <param name="ymax" value="$(arg ymax)"/>
+    <param name="zmin" value="$(arg zmin)"/>
+    <param name="zmax" value="$(arg zmax)"/>
+    <param name="target_rate" value="5"/>
+  </node>
+</launch>

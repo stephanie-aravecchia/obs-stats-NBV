@@ -1,0 +1,10 @@
+<launch>
+  <arg name="resolution"/>
+
+  <node pkg="explo_quality_aware" name="trajectory_costmap_node" type="trajectory_costmap_node" output="screen">
+    <remap from="~/map" to="/map"/><!--the low resolution map provided by octomap for the autonomous navigation only-->
+    <param name="max_update_rate" value="10"/>
+    <param name="costmap_resolution" value="$(arg resolution)"/>
+    <param name="cost_scale_factor" value="5."/>
+  </node>
+</launch>
