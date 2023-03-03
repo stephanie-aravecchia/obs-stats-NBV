@@ -1,5 +1,4 @@
 #include "comparator/box_tools.h"
-//#include "pot/EMD.h" TODO: this does not compile, don't know why
 #include <ros/ros.h>
 #include <assert.h>
 #include <algorithm>
@@ -10,7 +9,6 @@ BoxTools::BoxTools(int box_size) : box_size_(box_size) {}
 BoxTools::BoxTools(int box_size, int img_width, int img_height) : 
     box_size_(box_size), img_width_(img_width), img_height_(img_height) {}
 
-//This needs to be overriden in the inhereted class that will actually deal with the dataset
 //This is just for tests
 void BoxTools::load3DMat(cv::Mat_<uint8_t>& mat, const std::vector<std::string >& imglist) const {
     for (int k{0}; k < box_size_; k++) {
@@ -41,10 +39,6 @@ void BoxTools::getVectorFromBox(const std::vector<cv::Range>& ranges,
                 assert(j<img_height_);
                 assert(k<box_size_);
                 vect.push_back(pix2proba(refMat(i,j,k)));//this is (col, row, img)
-                //Above is same than before all changes
-                //vect.push_back(pix2proba(refMat(k,j,i)));//this is (col, row, img)
-                //TODO refMat(k,j,i) marche pourquoi ???????
-                //TODO et la matrice de cout elle fait quoi ??????
             }
         }
     }
@@ -55,9 +49,6 @@ void BoxTools::getVectorFromSingleBox(const cv::Mat_<double>& unitBox, vector<do
             for (int j{0}; j < box_size_; j++) {//then row
                 for (int i{0}; i < box_size_; i++) {//then col
                  vect.push_back(unitBox(i,j,k));//this is (col, row, img)
-                //vect.push_back(unitBox(k,j,i));//this is (col, row, img)
-                //TODO refMat(k,j,i) marche pourquoi ???????
-                //TODO et la matrice de cout elle fait quoi ??????
             }
         }
     }
@@ -69,9 +60,6 @@ void BoxTools::getVectorFromSingleBox(const cv::Mat_<uint8_t>& unitBox, vector<d
             for (int j{0}; j < box_size_; j++) {//then row
                 for (int i{0}; i < box_size_; i++) {//then col
                 vect.push_back(unitBox(i,j,k));//this is (col, row, img)
-                //vect.push_back(pix2proba(unitBox(k,j,i)));//this is (col, row, img)
-                //TODO refMat(k,j,i) marche pourquoi ???????
-                //TODO et la matrice de cout elle fait quoi ??????
             }
         }
     }
@@ -81,9 +69,6 @@ void BoxTools::get3DProbaImageFromSingleCube(const cv::Mat_<uint8_t>& refMat, cv
     for (int k{0}; k < box_size_; k++) {//img first
             for (int j{0}; j < box_size_; j++) {//then row
                 for (int i{0}; i < box_size_; i++) {//then col
-                //out(k,j,i)=(pix2proba(refMat(i,j,k)));//this is (col, row, img)
-                //pq k,j,i et pas i,j,k TODO j'ai l'impression que le probleme initial venait de la
-                //verif le code precedent !!!
                 out(i,j,k)=(pix2proba(refMat(i,j,k)));//this is (col, row, img)
             }
         }
@@ -103,23 +88,17 @@ void BoxTools::get3DProbaImageFromRange(const std::vector<cv::Range>& ranges, co
                 assert(i<img_width_);
                 assert(j<img_height_);
                 assert(k<box_size_);
-                //out(k-ranges[2].start,j-ranges[1].start,i-ranges[0].start)=(pix2proba(refMat(i,j,k)));//this is (col, row, img)
                 out(i-ranges[0].start,j-ranges[1].start,k-ranges[2].start)=(pix2proba(refMat(i,j,k)));//this is (col, row, img)
-                // 
             }
         }
     }
 }
 
-//TODO ca ne doit pas marcher si on lui donne des cv::Mat<uint8_t>
-//void BoxTools::getVectorOfImagesFromCube(const cv::Mat_<double>& pcube, std::vector<cv::Mat_<double>>& vect, int order) const {
 void BoxTools::getVectorOfImagesFromCube(const cv::Mat_<double>& pcube, std::vector<cv::Mat_<double>>& vect, int order) const {
     assert(vect.size() == box_size_);
-    //TODO use enum if we keep that and switch
     const int mat_sz[2] = {box_size_,box_size_};
     switch(order) {
         case 0://k slicing
-        //default: //TODO ca marche ca ?
             for (int k{0}; k < box_size_; k++) {
                 vect[k] = cv::Mat_<double>(2, mat_sz);
                 for (int j{0}; j < box_size_; j++) {
@@ -159,7 +138,6 @@ void BoxTools::getCubeFromVectorOfImages(cv::Mat_<double>& pcube, const std::vec
     assert(pcube.total() == (box_size_*box_size_*box_size_));
     switch(order) {
         case 0://k slicing
-        //default: //TODO ca marche ca ?
             for (int k{0}; k < box_size_; k++) {
                 for (int j{0}; j < box_size_; j++) {
                     for (int i{0}; i < box_size_; i++) {
@@ -229,8 +207,6 @@ double BoxTools::getRandomKSigma() const {
 
 void BoxTools::addRandomNoise(std::vector<double>& vect, double noise_level) const {
     assert(vect.size()>0);
-    //TODO I should use the same engine in another function, I cannot capture the class I think
-    //static unsigned int seed = static_cast<unsigned int>(ros::Time::now().toSec());
     static std::random_device rd;
     static std::default_random_engine engine(rd());
     std::uniform_real_distribution<double> random_dist(0.0,noise_level);
@@ -246,7 +222,6 @@ void BoxTools::normMinMax(std::vector<double> &vect) const {
     assert(vect.size() > 0);
     double min = *std::min_element(vect.begin(), vect.end());
     double max = *std::max_element(vect.begin(), vect.end());
-    //TODO division par 00
     assert((max - min) > 1e-6);
     auto norm = [min, max](double &x)
         { x = (x - min) / (max - min); };
@@ -395,15 +370,12 @@ void BoxTools::getNoisyGtVector(const std::vector<cv::Range>& ranges,
     //we get the vector back from this noisy cube
     getVectorFromSingleBox(noisygt, vect);
     normMinMax(vect);
-    //cout << vect << endl;
     //and finally, we add a uniform noise on the complete vector, if uniform_noise_level is provided
     if (fabs(additionnal_uniform_noise)>1e-6) {
         addRandomNoise(vect, additionnal_uniform_noise);
     } 
 } 
 
-//void BoxTools::getNoisyGtVector(const ComparatorDatatypes::BoxToProcessLimitOnly& box, 
-//            const cv::Mat_<uint8_t>& refMat, vector<double>& vect, double uniform_noise_level, bool use_fixed_sigma, double sigma) const {
 void BoxTools::getNoisyGtVectorDebug(const std::vector<cv::Range>& ranges, 
             const cv::Mat_<uint8_t>& refMat, vector<double>& vect, double uniform_noise_level, bool use_fixed_sigma, double sigma) const {
     bool debug = false;
@@ -415,15 +387,10 @@ void BoxTools::getNoisyGtVectorDebug(const std::vector<cv::Range>& ranges,
     }
     //If the box contains only 0, or sigma = 0, we skip this step:
     if (!(isBoxOnlyZeros(ranges, refMat))) {
-    //if (false) {
         //we create a 3d mat noisyGT, we initialize it with a copy of the gt selected cube
         const int mat_sz[3] = {box_size_,box_size_,box_size_};
         cv::Mat_<double> noisygt = cv::Mat_<double>(3, mat_sz);
-
-
         get3DProbaImageFromRange(ranges, refMat, noisygt);
-        
-        
         //We save the original GT, with the two methods to make sure they give the same results:
         if (debug) {
             char fname[60];
@@ -454,7 +421,6 @@ void BoxTools::getNoisyGtVectorDebug(const std::vector<cv::Range>& ranges,
         }
         getVectorOfImagesFromCube(noisygt, imgvect,0);
         if (sigma>1e-6){ 
-            //cv::Size kzise = getRandomKSize();
             cv::Size kzise = cv::Size(7,7);
             //then we slice the cube in the appropriate direction into a vector of image, we store taht in imgvect
             //do the convolution on all the images (temporary result saved in outputvect)
@@ -490,13 +456,11 @@ void BoxTools::getNoisyGtVectorDebug(const std::vector<cv::Range>& ranges,
         //if the box contains only zeros, we initialize the vector with zeros
         vect = std::vector<double>(box_size_*box_size_*box_size_,0);
     }
-    //cout << vect << endl;
     //and finally, we add a uniform noise on the complete vector, if uniform_noise_level is provided
     if (fabs(uniform_noise_level)>1e-6) {
         addRandomNoise(vect, uniform_noise_level);
     } else {
     }
-    //cout << vect << endl;
     //We save the noisy gt, with the two methods to make sure they give the same results:
     if (debug) {
         char fname2[60];
@@ -509,8 +473,8 @@ void BoxTools::saveSingleCubeToImg(const cv::Mat_<uint8_t>& refMat, const std::s
     for (int k{0}; k < box_size_; k++) {
         for (int i{0}; i<box_size_; i++) {
             for (int j{0}; j<box_size_; j++) {                    
-                //(row, col)                                                    //(col, row, img)
-                slice_img(j,i) = refMat(i,j,k);//TODO je vois bien mes slices de 0, de 1, ... mais ce n'est pas le cas dans le vecteur
+                //(row, col)            //(col, row, img)
+                slice_img(j,i) = refMat(i,j,k);
             }
         }
         char suffix[10];
@@ -523,10 +487,8 @@ void BoxTools::saveSingleCubeToImg(const cv::Mat_<double>& refMat, const std::st
     for (int k{0}; k < box_size_; k++) {
         for (int i{0}; i<box_size_; i++) {
             for (int j{0}; j<box_size_; j++) {                    
-        //for (int i{0}; i<box_size_; i++) {
-        //    for (int j{0}; j<box_size_; j++) {                    
-                //(row, col)                                                    //(col, row, img)
-                slice_img(j,i) = getNormalizedPixValue(refMat(i,j,k));//TODO je vois bien mes slices de 0, de 1, ... mais ce n'est pas le cas dans le vecteur
+                //(row, col)                             //(col, row, img)
+                slice_img(j,i) = getNormalizedPixValue(refMat(i,j,k));
             }
         }
         char suffix[10];
@@ -541,9 +503,7 @@ void BoxTools::saveSampleCubeToImg(const std::vector<cv::Range>& ranges, const c
     int cols = ranges[0].end-ranges[0].start;
     cv::Mat_<uint8_t> slice_img = cv::Mat_<uint8_t>(rows, cols);
     for (int k{ranges[2].start}; k < ranges[2].end; k++) {
-        //for (int j{ranges[0].start}; j<ranges[0].end; j++) { //PQ I est ici ??? et pas j ???
-        //    for (int i{ranges[1].start}; i<ranges[1].end; i++) {                    
-        for (int i{ranges[0].start}; i<ranges[0].end; i++) { //PQ I est ici ??? et pas j ???
+        for (int i{ranges[0].start}; i<ranges[0].end; i++) {
             for (int j{ranges[1].start}; j<ranges[1].end; j++) {                    
                 assert(i>=0);
                 assert(j>=0);
@@ -574,7 +534,6 @@ void BoxTools::saveBoxVectorToImg(const std::vector<double>& imgVect, const std:
         for (int j{0}; j < box_size_; j++) {//then row
             for (int i{0}; i < box_size_; i++) {//then col
                 //this is (row,col)
-                //slice_img(j,i) = getNormalizedPixValue(imgVect.at(k*img_stride+j*row_stride+i));
                 slice_img(j,i) = getNormalizedPixValue(imgVect.at(k*img_stride+j*row_stride+i));
             }
         } 
