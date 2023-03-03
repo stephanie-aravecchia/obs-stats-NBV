@@ -29,10 +29,6 @@ class ComparatorRecGt : protected BoxTools{
         int nx_;
         int ny_;
         int nz_;
-        //cv::Mat_<uint8_t> gtMat_;
-        //cv::Mat_<uint8_t> recMat_;
-        //cv::Mat_<uint8_t> res_;
-        //std::vector<cv::Mat_<uint8_t> > resColor_;
         std::vector<cv::Mat_<uint8_t> > gtMatVect_;
         std::vector<cv::Mat_<uint8_t> > recMatVect_;
         std::vector<ComparatorDatatypes::BoxToProcess> listOfBoxes_;
@@ -84,20 +80,12 @@ class ComparatorRecGt : protected BoxTools{
             ComparatorDatatypes::CovThresholds(0.7, 0.1),
             ComparatorDatatypes::CovThresholds(0.7, 0.15),
         };
-        //std::array<std::array<double,2>,4> cov_thresholds = std::array{
-        //    std::array{0.8, 0.05},
-        //    std::array{0.8, 0.1},
-        //    std::array{0.7, 0.1},
-        //    std::array{0.7, 0.2},
-        //};
         //to test a selection of boxes only
         bool unit_test_;
-        //std::vector<std::array<double,3> unit_samples_;
 
         //get the list of img path we will load from the img list on disk and the directory
         //we start loading with an offset
         void getImgList(std::vector<std::string >&, const std::string&, const std::string&, int) const;
-        //void setUnitSampleVector(const std::string&);
         
         //get starting index to start the comparaison at a coordinate which is a multiple of res
         //i.e if xmin is -5.28 and res .1, we start the comparaison a -5.20
@@ -122,33 +110,18 @@ class ComparatorRecGt : protected BoxTools{
         bool isQueryBoxIncludedInRef(const ComparatorDatatypes::PixBBox&, const ComparatorDatatypes::PixBBox&) const; 
         
         //Determine which metric will be used, call it appropriately, and store the results
-        //void calcMetricFromBox(const std::vector<cv::Range>&, int);
         void calcMetricFromBox(ComparatorDatatypes::BoxToProcess& box);
         //calculate the limit of the Wasserstein distance, with a reconstruction drawned randomly from gt
         void calcLimitMetricFromBox(ComparatorDatatypes::BoxToProcessLimitOnly& box);
         void calcLimitMetricFromBoxTestOnly(ComparatorDatatypes::BoxToProcessLimitOnly& box, std::ofstream&);
         void computeLimitMetricsOnVect(ComparatorDatatypes::Metrics&, std::vector<double>&, std::vector<double>&);
 
-        //void unitTestBox(const std::vector<cv::Range>&, int);
         void unitTestBox(ComparatorDatatypes::BoxToProcess&);
         void unitTestBox(ComparatorDatatypes::BoxToProcessLimitOnly&);
-        //void calcFullProbaMetricFromBox(const std::vector<cv::Range>&, int);
-        //double getDKLFromBox(const std::vector<cv::Range>&, int);
         
-        //compute the metrics:
-        //for each occupied point in the sample box in queryMat, we calculate the distance to the closest in refMat
-        //then, we do a statistic on those distances in the sample box: mean, max, sum, last decil
-        //ComparatorDatatypes::Metrics getMetricFromBox(const std::vector<cv::Range>&, int, const cv::Mat_<uint8_t>&, const cv::Mat_<uint8_t>&) const;
-        //void getDistMetricFromBox(ComparatorDatatypes::BoxToProcess&,const cv::Mat_<uint8_t>&, const cv::Mat_<uint8_t>&) const;
-
-        //void getVectorFromBox(const std::vector<cv::Range>&, int, const cv::Mat_<uint8_t>&, std::vector<double>&) const;
         void getVectorFromBox(const ComparatorDatatypes::BoxToProcess&, const cv::Mat_<uint8_t>&, std::vector<double>&) const;
         void getVectorFromBox(const ComparatorDatatypes::BoxToProcessLimitOnly&, const cv::Mat_<uint8_t>&, std::vector<double>&) const;
         void getNoisyGtVector(const ComparatorDatatypes::BoxToProcessLimitOnly&, const cv::Mat_<uint8_t>&, std::vector<double>&, double uniform_noise_level=.1, bool use_fixed_sigma=false, double sigma=0.) const;
-        //add noise to a ground truth box and retuns a vector, to use to calculate the wd limit of the dataset
-        //if the last three arguments are not provided, we pick a random sigma and add uniform noise
-        
-        //void getNoisyGtVector(const ComparatorDatatypes::BoxToProcessLimitOnly&, const cv::Mat_<uint8_t>&, std::vector<double>&, double uniform_noise_level=.1, bool use_fixed_sigma=false, double sigma=0.) const;
         
         bool isBoxOnlyZeros(const ComparatorDatatypes::BoxToProcessLimitOnly&, const cv::Mat_<uint8_t>&) const;        
         bool isBoxOnlyZeros(const ComparatorDatatypes::BoxToProcess&, const cv::Mat_<uint8_t>&) const;        
@@ -162,7 +135,6 @@ class ComparatorRecGt : protected BoxTools{
 
         void processSliceInListOfBoxes(int, int); 
         void processSliceInListOfBoxesSample(int, int); 
-        //void processSliceInListOfBoxesSample(int, int, std::vector<ComparatorDatatypes::BoxToProcess>&); 
         
         //utility functions to convert coordinates of the BBOX from pixels to meters
         void bboxPixToMeters(const ComparatorDatatypes::PixBBox&, ComparatorDatatypes::BBox&) const;
@@ -172,13 +144,10 @@ class ComparatorRecGt : protected BoxTools{
         void saveCubeToImg(const ComparatorDatatypes::BoxToProcess&, const cv::Mat_<uint8_t>&, const std::string&, const std::string&) const;
         void saveCubeToImg(const ComparatorDatatypes::BoxToProcessLimitOnly&, const cv::Mat_<uint8_t>&, const std::string&, const std::string&) const;
         bool isSampleDebug(const ComparatorDatatypes::BBox& mbox, double x, double y, double z) const;
-        //void save_sample_debug(const std::vector<cv::Range>& ranges, int start_slice, const ComparatorDatatypes::BBox& mbox, const ComparatorDatatypes::PixBBox& pixbox, int i) const;
-        //void save_sample_debug(const std::vector<cv::Range>& ranges, int start_slice, const ComparatorDatatypes::BBox& mbox, const ComparatorDatatypes::PixBBox& pixbox, int i) const;
         void save_sample_debug(const ComparatorDatatypes::BoxToProcess& box, int i) const;
 
     public:
         ComparatorRecGt();
-        //ComparatorRecGt(const std::string& dir, const std::string& xp, double resolution, double target_res);
         ComparatorRecGt(const std::string& base_dir, const std::string& xp, const std::string& output_dir, double target_res, double img_res, 
                         ComparatorDatatypes::PixBBox pixbox, ComparatorDatatypes::BBox metricsbox,
                         ComparatorDatatypes::Offsets gt_offset, ComparatorDatatypes::Offsets rec_offset, double ground_thres,
@@ -191,9 +160,6 @@ class ComparatorRecGt : protected BoxTools{
         //calculate the limit of the wasserstein distance based on a sample of GT
         void calcLimitWDDataset(int xp_number, bool sample_with_occ, bool sample_half_half, bool sample_empty_only, bool sample_with_ratio, size_t n_samples, double occ_level, double dataset_ratio);
         void saveResultsToDisk();
-        //static void sig_handler(int); 
-        //save ResColor_ as images in the output directory
-       // void saveResultsAsImg();
 };
 
 #endif

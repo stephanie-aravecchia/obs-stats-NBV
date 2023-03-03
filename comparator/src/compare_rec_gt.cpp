@@ -20,7 +20,6 @@ ComparatorRecGt::ComparatorRecGt(const std::string& dir, const std::string& xp, 
             base_dir_(dir), xp_name_(xp), output_dir_(outputdir), target_res_(target_res), img_res_(img_res), 
             space_pix_bbox_(pixbox), space_bbox_(metricsbox), rec_offset_(rec_offset), gt_offset_(gt_offset), ground_thres_(ground_thres),
             is_dist_metrics_(is_dist_metrics), is_dkl_metrics_(is_dkl_metrics), is_ot_metrics_(is_ot_metrics),n_threads_(nthreads),
-            //ot_reg_(ot_reg), ot_maxiter_(ot_maxiter), occupancy_thres_(haussdorff_occ_thres), reg_distance_(reg_distance), ot_stopthres_(ot_stopthres),
             ot_reg_(ot_reg), ot_maxiter_(ot_maxiter), occupancy_thres_(occ_thres), ot_stopthres_(ot_stopthres),
             divergence_to_unknown_thres_(divergence_to_unknown_thres), non_observed_vi_(non_observed_vi), non_observed_cov_(non_observed_cov),
             non_observed_acc_(non_observed_acc), non_observed_l1_(non_observed_l1), non_observed_dkl_(non_observed_dkl),
@@ -90,7 +89,6 @@ ComparatorRecGt::ComparatorRecGt(const std::string& dir, const std::string& xp, 
     istart_ = getStartingIndex(space_bbox_.xmin);
     jstart_ = getStartingIndex(space_bbox_.ymin);
     kstart_ = getStartingIndex(space_bbox_.zmin + ground_thres_);
-    //kstart_ = getStartingIndex(space_bbox_.zmin + ground_thres_*img_res_);
     cout << "istart_: " << istart_ 
          << ", jstart_: " << jstart_ 
          << ", kstart_: " << kstart_ << endl;
@@ -130,7 +128,6 @@ ComparatorRecGt::ComparatorRecGt(const std::string& dir, const std::string& xp, 
     }
     if (unit_test_) {
         std::string test_file_path = base_dir_ + "res/obs/" + xp_name_ + "/sample_list_to_test.csv";
-        //setUnitSampleVector(test_file_path);
     }
 }
 
@@ -180,12 +177,6 @@ void ComparatorRecGt::loadCompleteDataset() {
         load3DMat(gtMatVect_.at(thick_slice_number), gt_imglist_, gt_offset_, img_index);
         ++thick_slice_number;
     }
-    //for (size_t i{0}; i < gtMatVect_.size(); ++i) {
-    //   if (!ComputeMetrics::isGTImageBinary(gtMatVect_.at(i))) {
-    //        cerr << "GT is not binary at the end of loadCompleteDataset, at index: " << i << " on " <<gtMatVect_.size() << endl;
-    //        exit(EXIT_FAILURE);
-    //   }
-    //} 
 }
 //we loop on the complete dataset to get a list of the boxes to process
 void ComparatorRecGt::getListOfBoxes() {
@@ -260,21 +251,6 @@ int ComparatorRecGt::getStartingIndex(double minval) const {
 double ComparatorRecGt::getStartingDistance(double minval) const {
     return ceil(minval / target_res_) * target_res_ - minval;
 }
-//void ComparatorRecGt::setUnitSampleVector(const std::string& fname) {
-//    ifstream file(fname, ios::in);
-//    if (!file) {
-//        cerr << "cannot open " << fname << endl;
-//        exit(EXIT_FAILURE);
-//    }
-//    array<double,3> coords;
-//    //expects a file containing only lines with X Y Z coordinates
-//    unit_samples_.clear();
-//    while (file >> coords) {
-//        unit_samples_.push_back(coords);
-//    }
-//    cout << unit_samples_.size() << " samples loaded to perform unit test." << endl;  
-//    file.close();
-//}
 
 void ComparatorRecGt::getImgList(std::vector<std::string >& imglist_vector, const std::string& imglist, 
         const std::string& dir, int load_slice_start) const {
@@ -285,8 +261,6 @@ void ComparatorRecGt::getImgList(std::vector<std::string >& imglist_vector, cons
     }
     string fname;
     //we discard the first images before we can actually compare:
-    //TODO: this is dangerous if slice_start is larger than the actual img list, we segfault
-    //assert(load_slice_start < imglist_vector.size());
     for (int i{0}; i < load_slice_start; i++) {
         file >> fname;
     }
@@ -324,7 +298,6 @@ void ComparatorRecGt::load3DMat(cv::Mat_<uint8_t>& mat, const std::vector<std::s
         assert(tmp.size().height*tmp.size().width >0);
         assert(tmp.size().width >= img_width_ + offset.x);
         assert(tmp.size().height >= img_height_ + offset.y);
-        //cv::Mat_<uint8_t> tmp2 = cv::Mat_<uint8_t>(img_height_, img_width_);
         for (int i{0}; i < img_width_; i++) {
             for (int j{0}; j < img_height_; j++) {
                 assert(i >= 0);
@@ -342,8 +315,6 @@ void ComparatorRecGt::load3DMat(cv::Mat_<uint8_t>& mat, const std::vector<std::s
                 mat.at<uint8_t>(i, j, k-start_slice) = tmp.at<uint8_t>(j+offset.y,i+offset.x);
             }
         }
-        //cv::imshow("img", tmp2);
-        //cv::waitKey(0);
     }
 
 }
@@ -429,7 +400,6 @@ void ComparatorRecGt::unitTestBox(ComparatorDatatypes::BoxToProcess& box){
                 << ", n_rec_points: " << box.metrics.n_rec_points
                 << ", n_gt_points: " << box.metrics.n_gt_points
                 << endl;
-        //save_sample_debug(box.ranges, box.index_in_vect, box.mbbox, pixBox, debug_n);
         save_sample_debug(box, debug_n);
         ++debug_n;
     }
@@ -497,7 +467,6 @@ void ComparatorRecGt::calcLimitMetricFromBox(ComparatorDatatypes::BoxToProcessLi
         computeLimitMetricsOnVect(box.random, rec_random_vector, gt_vector);
         vector<double> rec_noisy_gt_vector;
         //conv1:
-        //addintional : 0.05, sigma : 0.5 ksize :7 (verif les xp de l'epoque)
         getNoisyGtVector(box, gtMatVect_.at(box.index_in_vect), rec_noisy_gt_vector, 
                 noise_on_gt_[0].sigma, noise_on_gt_[0].ksize, noise_on_gt_[0].additionnal_uniform_noise);
         computeLimitMetricsOnVect(box.ideal_conv1, rec_noisy_gt_vector, gt_vector);
@@ -514,27 +483,6 @@ void ComparatorRecGt::calcLimitMetricFromBox(ComparatorDatatypes::BoxToProcessLi
                 noise_on_gt_[2].sigma, noise_on_gt_[2].ksize, noise_on_gt_[2].additionnal_uniform_noise);
         computeLimitMetricsOnVect(box.ideal_conv3, rec_noisy_gt_vector, gt_vector);
     }
-//    
-//    
-//    box.metrics_ideal.gt_occupancy_rate = getBoxOccupancyRate(box, gtMatVect_.at(box.index_in_vect));    
-//    box.metrics_random.gt_occupancy_rate = box.metrics_ideal.gt_occupancy_rate; 
-//    
-//    //now, we want to calculate two limits for the wasserstein distance, L1 and cov ??
-//    //1. limit when comparing gt to noisy gt
-//    //2. limit when comparing gt to random
-//    
-//    double level = .05;
-//    double sigma = .5;
-//    getNoisyGtVector(box, gtMatVect_.at(box.index_in_vect), rec_noisygt_vector,level,true,sigma);
-//    drawRandomDistri(gt_vector.size(), rec_random_vector); 
-//    //We will try without the Cuturi's normalization 
-//    ComputeOTMetrics::OccFreeWasserstein wasserstein;
-//    wasserstein = ot_metrics_.normalizeAndGetSinkhornDistanceSigned(rec_noisygt_vector, gt_vector);
-//    box.metrics_ideal.wasserstein_occ = wasserstein.occ;
-//    box.metrics_ideal.wasserstein_free = wasserstein.free;
-//    wasserstein = ot_metrics_.normalizeAndGetSinkhornDistanceSigned(rec_random_vector, gt_vector);
-//    box.metrics_random.wasserstein_occ = wasserstein.occ;
-//    box.metrics_random.wasserstein_free = wasserstein.free;
 
 }
 void ComparatorRecGt::computeLimitMetricsOnVect(ComparatorDatatypes::Metrics& metrics, std::vector<double>& rec_vector, std::vector<double>& gt_vector) {
@@ -556,21 +504,8 @@ void ComparatorRecGt::calcMetricFromBox(ComparatorDatatypes::BoxToProcess& box) 
     box.metrics.n_gt_points = ComputeMetrics::getNpoints(gt_vector, occupancy_thres_);    
     box.metrics.n_rec_points = ComputeMetrics::getNpoints(rec_vector, occupancy_thres_);    
 
-    //if (!ComputeMetrics::isGTImageBinary(gtMatVect_.at(box.index_in_vect))) {
-    //    cerr << "GT Image is not binary at the beginning of calcMetricFromBox, at index: " << box.index_in_vect << " on " <<gtMatVect_.size() << endl;
-    //    exit(EXIT_FAILURE);
-    //}
-    //if (!ComputeMetrics::isGTVectorBinary(gt_vector)) {
-    //    cerr << "GT Vector is not binary at the beginning of calcMetricFromBox, at index: " << box.index_in_vect << " on " <<gtMatVect_.size() << endl;
-    //    cerr <<" mbox box: " << box.mbbox << endl;
-    //    exit(EXIT_FAILURE);
-    //}
-
     bool is_observed = BoxTools::isBoxObserved(rec_vector, divergence_to_unknown_thres_);
     bool is_gt_empty = isBoxOnlyZeros(box, gtMatVect_.at(box.index_in_vect));
-    ////debug:
-    //bool is_rec_empty = isBoxOnlyZeros(box, recMatVect_.at(box.index_in_vect));
-    //std::cout << "is_gt_empty: " << boolalpha << is_gt_empty << ", is_rec_empty: " << is_rec_empty << endl;
     if (is_dist_metrics_) {
         if (is_observed) {
             box.metrics.volumetric_information = ComputeMetrics::getVolumetricInformation(rec_vector);        
@@ -668,11 +603,6 @@ void ComparatorRecGt::calcMetricFromBox(ComparatorDatatypes::BoxToProcess& box) 
             }
         }
     }
-    //if (box.metrics.n_gt_points > 400) {
-    //    saveCubeToImg(box, gtMatVect_.at(box.index_in_vect), "gt", "/home/saravecchia/bags/husky/xp_metrics/res/obs/"+xp_name_+"/sample_cubes");
-    //    saveCubeToImg(box, recMatVect_.at(box.index_in_vect), "rec", "/home/saravecchia/bags/husky/xp_metrics/res/obs/"+xp_name_+"/sample_cubes");
-    //    std::cout << "index_in_vect: " << box.index_in_vect << "ranges: " << box.ranges[0] << ", " << box.ranges[1] << std::endl;
-    //} 
 }
 
 void ComparatorRecGt::processSliceInListOfBoxesSample(int start, int end) {
@@ -682,18 +612,11 @@ void ComparatorRecGt::processSliceInListOfBoxesSample(int start, int end) {
         //we want to calculate the limit only
         //and we save to disk only at the end
         calcLimitMetricFromBox(*it);
-        ++counter;
-        if (counter > (counter_target_/n_threads_)) {
-            std::cout << "progress: " << (static_cast<double>(counter_target_)/sampleOfBoxes_.size())*100 << " %" << std::endl;
-            saveResultsLimitToDisk(counter_target_, sampleOfBoxes_); 
-            counter_target_ += (sampleOfBoxes_.size()/10);
-        }
     }
 }
 
 void ComparatorRecGt::processSliceInListOfBoxes(int start, int end) {
     assert(listOfBoxes_.begin() + end <= listOfBoxes_.end());
-    //unsigned int counter{0};
     if (unit_test_) {
         cout << "Flag unit_test_ set to: " << boolalpha << unit_test_ << endl;
     }
@@ -703,12 +626,6 @@ void ComparatorRecGt::processSliceInListOfBoxes(int start, int end) {
         } else {
             unitTestBox(*it);
         }
-        //++counter;
-        //if (counter > (counter_target_/n_threads_)) {
-        //    std::cout << "progress: " << (static_cast<double>(counter_target_)/tot_box_)*100 << " %" << std::endl;
-        //    saveResultsToDisk(counter_target_); 
-        //    counter_target_ += (tot_box_/10);
-        //}
     }
 }
 //We loop on GT dataset and get N samples of a mimimum level occupancy <level>
@@ -749,7 +666,6 @@ void ComparatorRecGt::saveCubeToImg(const ComparatorDatatypes::BoxToProcess& box
 
 void ComparatorRecGt::calcLimitWDDataset(int xp_number, bool sample_with_occ, bool sample_half_half, bool sample_empty_only, bool sample_with_ratio, size_t n_samples, double occ_level, double dataset_ratio){
     //check that we can write results to disk at the end:
-    //std::string dir = base_dir_ + "res/obs/" + xp_name_ + "/"; 
     std::string dir = output_dir_ + "/"; 
     char suffix[40];
     
@@ -820,11 +736,6 @@ void ComparatorRecGt::calcLimitWDDataset(int xp_number, bool sample_with_occ, bo
     int tot = sampleOfBoxes_.size();
     int k = tot / n_threads_;
     cout << "sample size is: " << tot << endl;
-    counter_target_ = tot / 10;//means I want to display and save every 5%
-    if (counter_target_ ==0) {
-        counter_target_ = 1;
-    }
-    cout << "counter_target_  set to :  " << counter_target_ << endl;
     
     std::vector<std::shared_ptr<std::thread> > threads;
     threads.resize(n_threads_);
@@ -845,7 +756,6 @@ void ComparatorRecGt::calcLimitWDDataset(int xp_number, bool sample_with_occ, bo
 
 void ComparatorRecGt::compare(int xp_number){
     //check that we can write results to disk at the end:
-    //std::string dir = base_dir_ + "res/obs/" + xp_name_ + "/"; 
     std::string dir = output_dir_ + "/"; 
     res_base_filename_ = dir + "comparaison_new_" + to_string(xp_number);
     resf_short_ = ofstream{res_base_filename_ + ".csv",ios::out};
@@ -856,23 +766,10 @@ void ComparatorRecGt::compare(int xp_number){
     getListOfBoxes();
     loadCompleteDataset();
     
-    //std::random_device rd;
-    //static std::default_random_engine engine(rd());
-    //std::shuffle(listOfBoxes_.begin(), listOfBoxes_.end(), engine); 
-    
     //and now we multithread:
     int tot = listOfBoxes_.size();
     int k = tot/n_threads_;
-    //std::thread* th1=NULL;
-    //th1 = new std::thread(&ComparatorRecGt::processSliceInListOfBoxes,this,0, k);
-    //th1->join();
-    //delete th1;
-    counter_target_ = tot_box_/10;
-    if (counter_target_ ==0) {
-        counter_target_ = 1;
-    }
     std::cout << " number of boxes to process: " << tot << std::endl;
-    //std::cout << "counter_target_  set to :  " << counter_target_ << "(to display progress only)" << std::endl;
     std::vector<std::shared_ptr<std::thread> > threads;
     threads.resize(n_threads_);
     for (int i{0}; i < n_threads_; ++i) {
@@ -970,9 +867,7 @@ void ComparatorRecGt::saveResultsToDisk(int count) {
         resf_short_ << endl;
     }
     resf_short_.close();
-    //cout << "we have processed: " << counter_ << " voxels." << endl;
     cout << "we have processed at least: " << counter_target_ << " voxels." << endl;
-    //string dir = base_dir_ + "res/obs/" + xp_name_ + "/";
     string dir = output_dir_+ "/";
     string out_info = dir + "compare_ot_gt_info.txt";
     std::cout <<"Writing info to: " << out_info << std::endl;
@@ -990,10 +885,8 @@ void ComparatorRecGt::saveResultsToDisk(int count) {
     cout << "csv results are stored in: " << dir << endl;
 
 }
-//void ComparatorRecGt::save_sample_debug(const vector<cv::Range>& ranges, int start_slice, const ComparatorDatatypes::BBox& mbox, const ComparatorDatatypes::PixBBox& pixbox, int debugcount) const {
 void ComparatorRecGt::save_sample_debug(const ComparatorDatatypes::BoxToProcess& box, int debugcount) const {
     string dir = base_dir_ + "res/obs/" + xp_name_ + "/";
-    //TODO: should initialize the file elsewhere
     ofstream debugf = ofstream(dir + "sample_debug.csv", ios::app);
     checkFile(debugf);
     debugf << debugcount << " "
@@ -1002,7 +895,6 @@ void ComparatorRecGt::save_sample_debug(const ComparatorDatatypes::BoxToProcess&
            << box.mbbox.ymin << " "
            << box.mbbox.zmin << endl;
     
-    //not sure below is correct, we will just call saveSampleCubeToImg
     char fname1[40];
     sprintf(fname1, "debug_gt_%02d_", debugcount);
     saveSampleCubeToImg(box.ranges, gtMatVect_.at(box.index_in_vect), fname1, dir);
