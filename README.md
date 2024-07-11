@@ -1,6 +1,6 @@
 # Next-Best-View selection from observation viewpoint statistics
 
-This git repository contains the code related to the IROS 2023 submitted paper:  
+This git repository contains the code related to the IROS 2023 paper:  
 > "Next-Best-View selection from observation viewpoint statistics", Stéphanie Aravecchia, Antoine Richard, Marianne Clausel, Cédric Pradalier, 2023.
 
 ## The main packages are:
