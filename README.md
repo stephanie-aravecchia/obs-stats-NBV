@@ -16,6 +16,9 @@ This git repository contains the code related to the IROS 2023 paper:
 ### NBV exploration policy
 * `explo_quality_aware` the ROS node to explore with NBV policies based on viewpoint statistics
 
+### Classic exploration policies
+* implementation of closest frontier, random frontier, or random free policies: https://github.com/stephanie-aravecchia/base_explorer.git
+
 ## The simulated environments can be found here:
 https://github.com/stephanie-aravecchia/unstructured-env-simulator
 
